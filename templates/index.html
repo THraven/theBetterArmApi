@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>µWeb base project</title>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js"></script>
+    {{inline style.html}}
+
+  </head>
+  <body>
+    <script language="JavaScript">
+      $(document).ready(function(){
+        // head call for the stats link
+        $("#stats").click(function(e){
+          var Max_vel = document.getElementById("Max_vel").value;
+          var Spin_rate = document.getElementById("Spin_rate").value;
+          var Feed_rate = document.getElementById("Feed_rate").value;
+          $.ajax({
+            type: 'HEAD',
+            url: "/Stats",
+            data: {"Max_vel": Max_vel, "Spin_rate": Spin_rate, "Feed_rate": Feed_rate},
+            complete: function(data) {
+              stuff = data.responseJSON;
+              console.log(stuff);
+            }
+          });
+        });
+        $("#prefabs").click(function(e){
+          $.ajax({
+            type: 'HEAD',
+            url: "/Prefabs",
+            data: {"id": document.getElementById("prefab-id").value},
+            complete: function(data) {
+              stuff = data.responseJSON;
+              console.log(stuff);
+            }
+          });
+        });
+        $("#pos").click(function(e) {
+          window.setInterval(function(){
+          $.ajax({
+              type: 'GET',
+              url: "/Position",
+              complete: function(data) {
+                stuff = data.responseJSON["axis"];
+                console.log(stuff);
+                document.getElementById("x").innerHTML = stuff['X'];
+                document.getElementById("y").innerHTML = stuff['Y'];
+                document.getElementById("z").innerHTML = stuff['Z'];
+              }
+          });
+        }, 500);
+       });
+      });
+    </script>
+
+    <h2>Position</h2>
+    <button id="pos">start tracking</button>
+    <div id="x">xyz</div>
+    <div id="y">xyz</div>
+    <div id="z">xyz</div>
+    <form action="/Position" method="POST">
+      <input type="text" name="X">
+      <input type="text" name="Y">
+      <input type="text" name="Z">
+      <input type="text" name="F">
+      <button type="submit" name="submit" value=1>POST</button> works
+    </form><br>
+
+    <form action="/Position" method="GET">
+      <button type="submit" name="submit">GET</button> works
+    </form><br>
+
+    <h2>File</h2>
+
+    <form action="/File" method="POST" enctype="multipart/form-data">
+      <input id="File" type="file" name="File" />
+      <button type="submit" name="submit" value=1>POST</button> works... but i don't trust it
+    </form><br>
+
+    <form action="/File" method="GET">
+      <button type="submit" name="submit" value=1>GET</button> works
+    </form><br>
+
+    <h2>Stats</h2>
+
+    <form action="/Stats" method="GET">
+      <button type="submit">GET</button> works
+    </form><br>
+
+    Max_vel: | <input id="Max_vel" type="text" name="Max_vel"> works <br>
+    Spin_rate: <input id="Spin_rate" type="text" name="Spin_rate"> doesn't work, will do nothing as of current <br>
+    Feed_rate: <input id="Feed_rate" type="text" name="Feed_rate"> works <br>
+    <button id="stats">HEAD</button>
+    <br>
+    <h2>home</h2>
+
+    <form action="/Home" method="GET">
+      <button>GET</button>
+    </form><br>
+    <form action="/Home" method="POST">
+      <button>POST</button>
+    </form><br>
+
+    <h2>Buttons</h2>
+    <form action="/Buttons" method="post">
+      <button type="submit" name="Command" value="Mdi_mode">switch to mdi mode</button>
+    </form>
+    <form action="/Buttons" method="post">
+      <button type="submit" name="Command" value="Estop">Estop</button>
+    </form>
+    <form action="/Buttons" method="post">
+      <button type="submit" name="Command" value="Stop">stop</button>
+    </form>
+    <form action="/Buttons" method="post">
+      <button type="submit" name="Command" value="Pause">pause</button>
+    </form>
+    <form action="/Buttons" method="post">
+      <button type="submit" name="Command" value="Resume">resume</button>
+    </form>
+    <form action="/Buttons" method="post">
+      <button type="submit" name="Command" value="Repeat">repeat</button>
+    </form>
+
+    <h2>prefab</h2>
+    <form action="/Prefabs" method="GET">
+      <button type="submit">GET</button>
+    </form>
+
+    <form action="/Prefabs" method="post" enctype="multipart/form-data">
+      <input type="file" name="file">
+      <button type="submit" >POST</button>
+    </form>
+
+    <input id="prefab-id" type="text" name="id">
+    <button id="prefabs" type="submit" >HEAD</button>
+
+    <h2>power</h2>
+    <form action="/Power" method="GET">
+      <button type="submit" name="button">GET</button>
+    </form>
+    <form action="/Power" method="POST">
+      <button type="submit" name="button">POST</button>
+    </form>
+
+    <h2>status</h2>
+    <form action="/Status" method="GET">
+      <button type="submit" name="button">GET</button>
+    </form>
+  </body>
+</html>

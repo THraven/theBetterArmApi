@@ -1,0 +1,214 @@
+<style media="screen">
+body{
+  background-color: #1c1F24;
+  color: white;
+}
+.subcontainer{
+  /* display: flex; */
+}
+
+.pannel{
+  margin-top: 0;
+  width: 39%;
+  height: auto;
+  margin-left: 60%;
+  background-color: #161a1d;
+  position: absolute;
+  color: white;
+  border-width: 10px;
+}
+.pannel .status{
+  display: flex;
+}
+.container{
+  position: absolute;
+  display: flex;
+  margin-top: 20%;
+  text-align: center;
+}
+.time{
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+.linkContainer{
+  align: center;
+  margin-right: 10px;
+}
+.dots{
+  margin-top: 58px;
+  margin-left: 380px;
+  position: absolute;
+}
+.dots:hover .panal{
+  display: block;
+}
+
+.link{
+  margin: 0 auto;
+  border-bottom: 10px;
+  border-color: darkgrey;
+  background-color: #2e2e2e;
+  width: 400px;
+  height: 80px;
+  color: white;
+  display: flex;
+}
+a{
+  outline: none;
+  text-decoration: none;
+  width: 400px;
+  height: 80px;
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.logo{
+  align: left;
+  width: 80px;
+  height: 80px;
+  background-color: black;
+}
+.title{
+  /* text-align: center; */
+  color: white;
+  align: right;
+  height: 80px;
+  font-size: 200%;
+  /* font-family: fantasy; */
+
+}
+
+
+.divider{
+  height: 100%;
+  width: 5px;
+  background-color: RGB(200,10,10);
+  border-color: red;
+  border-top: none;
+  border-bottom: none;
+  margin-right: 5px;
+}
+
+.logo img{
+  width: 80px;
+  height: 80px;
+}
+
+.link:hover{
+  border-color: #E46A68;
+}
+
+
+
+
+.on{
+  animation-name: greenPulse;
+  animation-iteration-count: infinite;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation-duration: 1s;
+  position: absolute;
+
+}
+.WIP{
+  animation-name: bluePulse;
+  animation-iteration-count: infinite;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation-duration: 1s;
+  position: absolute;
+
+}
+.off{
+  animation-name: redPulse;
+  animation-iteration-count: infinite;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation-duration: 1s;
+  position: absolute;
+
+}
+.pulse{
+  margin: 0;
+  animation-name: pulse;
+  animation-iteration-count: infinite;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation-duration: 1s;
+  position: absolute;
+}
+
+@keyframes greenPulse {
+    0%   {background-color: green;}
+    50%  {background-color: darkgreen;}
+    100%  {background-color: green;}
+}
+@keyframes redPulse {
+    0%   {background-color: red;}
+    50%  {background-color: darkred;}
+    100%  {background-color: red;}
+}
+@keyframes bluePulse {
+    0%   {background-color: blue;}
+    50%  {background-color: darkblue;}
+    100%  {background-color: blue;}
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  10%{
+    transform: scale(0.4);
+    opacity: 0.2;
+  }
+
+  20% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  30% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.9;
+  }
+  60%{
+    transform: scale(1.4);
+    opacity: 0.8;
+  }
+  70%{
+    transform: scale(1.6);
+    opacity: 0.6;
+  }
+  80%{
+    transform: scale(1.8);
+    opacity: 0.4;
+  }
+  90%{
+    transform: scale(1.9);
+    opacity: 0.2;
+  }
+  100%{
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+</style>
