@@ -23,6 +23,7 @@ PAGE_CLASS = pages.PageMaker
 # be provided as arguments on the methods they call to.
 ROUTES = (('/', 'Index'),
           ("/Position", "Position"),
+          ("/Coolant", "Coolant"),
           ('/File', 'File'),
           ('/Power', 'Power'),
           ('/Status', 'Status'),

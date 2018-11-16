@@ -103,15 +103,14 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson = {"axis": axis, "axis_max": axis_max, "axis_min": axis_min}
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
-    # if you wanna change how the HEAD works, do it here
-    def head():
-      pass
-      # if self.post.getfirst("submit")
-    method = {
-      "POST": post(),
-      "GET": get(),
-    }
-    return method[self.req.env["REQUEST_METHOD"]]
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
 
   # FFFile
   def File(self):
@@ -147,12 +146,14 @@ class PageMaker(uweb.DebuggingPageMaker):
         else:
           pass
 
-    method = {
-      "GET": get(),
-      "POST": post(),
-    }
+    req = self.req.env["REQUEST_METHOD"]
 
-    return method[self.req.env["REQUEST_METHOD"]]
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
 
   # FFStats
   def Stats(self):
@@ -189,11 +190,15 @@ class PageMaker(uweb.DebuggingPageMaker):
         if Feed_rate:
           self.c.feedrate(float(headz["Feed_rate"]))
         return 1
-    method = {
-      "GET": get(),
-      "HEAD": head(),
-    }
-    return method[self.req.env["REQUEST_METHOD"]]
+
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
 
   # FFHome
   def Home(self):
@@ -212,11 +217,14 @@ class PageMaker(uweb.DebuggingPageMaker):
           self.c.home(i)
           self.c.wait_complete()
 
-    method = {
-      "GET": get(),
-      "POST": post(),
-    }
-    return method[self.req.env["REQUEST_METHOD"]]
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
 
   # FFButtons
   def Buttons(self):
@@ -296,13 +304,12 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.auto(linuxcnc.AUTO_RUN, 1)
 
 
-    method = {
-      "GET": get(),
-      "POST": post(),
-      "HEAD": head(),
-    }
-
-    return method[self.req.env["REQUEST_METHOD"]]
+    if self.req.env["REQUEST_METHOD"] == "GET":
+      return get()
+    elif self.req.env["REQUEST_METHOD"] == "POST":
+      return post()
+    elif self.req.env["REQUEST_METHOD"] == "HEAD":
+      return head()
 
   # FFpower
   def Power(self):
@@ -310,22 +317,24 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       return self.s.axis[1]["enabled"]
     def post():
-      if self.req.env["REQUEST_METHOD"] == "POST":
-        self.s.poll()
-        on = self.s.axis[1]["enabled"]
-        if on:
-          self.c.state(3)
-        else:
-          self.c.state(4)
-        return self.Index()
+      self.s.poll()
+      on = self.s.axis[1]["enabled"]
+      if on:
+        self.c.state(3)
+      else:
+        self.c.state(4)
+      return self.Index()
 
 
-    method = {
-      "GET": get(),
-      "POST": post(),
-    }
 
-    return method[self.req.env["REQUEST_METHOD"]]
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
 
 
   def Status(self):
@@ -342,6 +351,32 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson.update({"Home": home})
       Rjson.update({"Active": running})
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
+
+
+  def Coolant(self):
+    self.s.poll()
+    def get():
+      return uweb.Response(json.dumps({"mist": self.s.mist, "flood": self.s.flood}), content_type="application/json")
+    def post():
+      if self.post.getfirst("FOM") == "flood":
+        if self.s.mist == True:
+          self.c.flood(linuxcnc.FLOOD_OFF)
+        else:
+          self.c.flood(linuxcnc.FLOOD_ON)
+      if self.post.getfirst("FOM") == "mist":
+        if self.s.flood == True:
+          self.c.mist(linuxcnc.MIST_OFF)
+        else:
+          self.c.mist(linuxcnc.MIST_ON)
+
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
 
 
   def FourOhFour(self, path):
