@@ -18,7 +18,7 @@ PAGE_CLASS = pages.PageMaker
 # If a match is found, traversal stops and the method name corresponding the
 # regex is looked up on the provided `PAGE_CLASS`. This method is then used to
 # generate a response.
-#
+# 
 # Any capture groups defined in the regular expressions of the `ROUTES` will
 # be provided as arguments on the methods they call to.
 ROUTES = (('/', 'Index'),

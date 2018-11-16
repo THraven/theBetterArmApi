@@ -352,7 +352,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson.update({"Active": running})
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
-
+  # FFCoolant
   def Coolant(self):
     self.s.poll()
     def get():
