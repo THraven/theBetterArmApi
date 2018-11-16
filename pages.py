@@ -72,6 +72,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       axis = self.axisInMachine()
       for i in axis:
         if self.post.getfirst(self.axis[i]):
+<<<<<<< HEAD
           gcode = gcode + "%s%s " % (self.axis[i],
                                      self.post.getfirst(self.axis[i]))
         else:
@@ -81,6 +82,12 @@ class PageMaker(uweb.DebuggingPageMaker):
         gcode = gcode + "F%s" % self.post.getfirst("F")
       else:
         gcode + "F10000"
+=======
+          gcode = gcode + "%s%s "%(self.axis[i], self.post.getfirst(self.axis[i]))
+        else:
+          gcode = gcode + "%s%s "%(self.axis[i], round(pos[i]))
+      gcode = gcode + "F%s" %self.post.getfirst("F") if self.post.getfirst("F") else gcode + "F10000"
+>>>>>>> changed the way the links process the requests
       self.c.mdi(gcode)
       return gcode
 
@@ -102,6 +109,11 @@ class PageMaker(uweb.DebuggingPageMaker):
       return get()
     elif req == "POST":
       return post()
+<<<<<<< HEAD
+=======
+    elif req == "HEAD":
+      return head()
+>>>>>>> changed the way the links process the requests
 
   # FFFile
   def File(self):
@@ -110,6 +122,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     POST will allow you to run a file.
     """
     def get():
+<<<<<<< HEAD
         self.s.poll()
         file = self.s.file
         if file != "":
@@ -119,6 +132,17 @@ class PageMaker(uweb.DebuggingPageMaker):
           running = [False, "no file running"]
         Rjson = {"Running": running[0], "Running_file": running[1], "file": file}
         return uweb.Response(json.dumps(Rjson), content_type="application/json")
+=======
+      self.s.poll()
+      file = self.s.file
+      if file != "":
+        Temp = file.split("/")
+        running = [True, Temp[len(Temp) -1]]
+      else:
+        running = [False, "no file running"]
+      Rjson = {"Running": running[0], "Running_file": running[1], "file": file}
+      return uweb.Response(json.dumps(Rjson), content_type="application/json")
+>>>>>>> changed the way the links process the requests
 
     def post():
       try:
@@ -146,6 +170,11 @@ class PageMaker(uweb.DebuggingPageMaker):
       return get()
     elif req == "POST":
       return post()
+<<<<<<< HEAD
+=======
+    elif req == "HEAD":
+      return head()
+>>>>>>> changed the way the links process the requests
 
   # FFStats
   def Stats(self):
@@ -173,6 +202,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
     def head():
+<<<<<<< HEAD
       if self.req.env['REQUEST_METHOD'] == "HEAD":
         headz = self.queryParser()
         for i in headz:
@@ -186,11 +216,30 @@ class PageMaker(uweb.DebuggingPageMaker):
         if Feed_rate:
           self.c.feedrate(float(headz["Feed_rate"]))
         return 1
+=======
+      headz = self.queryParser()
+      for i in headz:
+        Max_vel = 1 if i == "Max_vel" else None
+        Spin_rate = 1 if i == "Spin_rate" else None
+        Feed_rate = 1 if i == "Feed_rate" else None
+      if Max_vel:
+        self.c.maxvel(float(headz["Max_vel"]))
+      if Spin_rate:
+        pass
+      if Feed_rate:
+        self.c.feedrate(float(headz["Feed_rate"]))
+      return 1
+>>>>>>> changed the way the links process the requests
 
     req = self.req.env["REQUEST_METHOD"]
 
     if req == "GET":
       return get()
+<<<<<<< HEAD
+=======
+    elif req == "POST":
+      return post()
+>>>>>>> changed the way the links process the requests
     elif req == "HEAD":
       return head()
 
@@ -210,13 +259,17 @@ class PageMaker(uweb.DebuggingPageMaker):
       return home
 
     def post():
-      if self.req.env["REQUEST_METHOD"] == "POST":
-        for i in self.axisInMachine():
-          self.c.home(i)
-          self.c.wait_complete()
+      for i in self.axisInMachine():
+        self.c.home(i)
+        self.c.wait_complete()
 
     req = self.req.env["REQUEST_METHOD"]
 
+<<<<<<< HEAD
+    req = self.req.env["REQUEST_METHOD"]
+
+=======
+>>>>>>> changed the way the links process the requests
     if req == "GET":
       return get()
     elif req == "POST":
@@ -278,6 +331,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
     def post():
+<<<<<<< HEAD
       if self.req.env["REQUEST_METHOD"] == "POST":
         name = self.post["file"].filename
         content = self.post["file"].value
@@ -309,6 +363,40 @@ class PageMaker(uweb.DebuggingPageMaker):
       return post()
     elif self.req.env["REQUEST_METHOD"] == "HEAD":
       return head()
+=======
+      name = self.post["file"].filename
+      content = self.post["file"].value
+      O = open("armApi/prefabs/0&amount.txt", "r")
+      number = O.read()
+      F = open("armApi/prefabs/%s&%s"%(number, name), "w")
+      try:
+        F.write(unicode(content, "utf-8"))
+      except Exception as e:
+        return "please use utf8 encoding for your files"
+      return self.Index()
+
+    def head():
+      id = self.queryParser()["id"]
+      for i in os.listdir("armApi/prefabs"):
+        name = i.split("&")[0]
+        if name == id:
+          fullname = i
+      self.c.mode(linuxcnc.MODE_AUTO)
+      self.c.wait_complete()
+      self.c.program_open("/home/machinekit/Desktop/armApi/prefabs/%s"%fullname)
+      self.c.wait_complete()
+      self.c.auto(linuxcnc.AUTO_RUN, 1)
+
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+    elif req == "HEAD":
+      return head()
+
+>>>>>>> changed the way the links process the requests
 
   # FFpower
   def Power(self):
@@ -319,6 +407,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     def get():
       self.s.poll()
       return self.s.axis[1]["enabled"]
+<<<<<<< HEAD
 
     def post():
       self.s.poll()
@@ -330,6 +419,23 @@ class PageMaker(uweb.DebuggingPageMaker):
       return self.Index()
 
     req = self.req.env["REQUEST_METHOD"]
+=======
+    def post():
+      self.s.poll()
+      on = self.s.axis[1]["enabled"]
+      if on:
+        self.c.state(3)
+      else:
+        self.c.state(4)
+      return self.Index()
+
+    req = self.req.env["REQUEST_METHOD"]
+
+    if req == "GET":
+      return get()
+    elif req == "POST":
+      return post()
+>>>>>>> changed the way the links process the requests
 
     if req == "GET":
       return get()
