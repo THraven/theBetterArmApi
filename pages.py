@@ -233,7 +233,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.mode(linuxcnc.MODE_MDI)
       elif self.post.getfirst("Command") =="Estop":
         self.s.poll()
-        # return uweb.Response(json.dumps({"stop": self.s.estop}), content_type="application/json")
         if self.s.estop:
           self.c.state(2)
         else:
