@@ -130,7 +130,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.wait_complete()
         with open("armApi/temp.ngc", "w") as F:
           F.write(fileData)
-        self.c.program_open("/home/machinekit/Desktop/armApi/temp.ngc")
+        self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
         self.c.auto(linuxcnc.AUTO_RUN, 1)
         Rjson = {"fileData": fileData, "fileName": fileName}
@@ -243,7 +243,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.auto(linuxcnc.AUTO_RESUME)
       elif self.post.getfirst("Command") == "Repeat":
         self.c.mode(linuxcnc.MODE_AUTO)
-        self.c.program_open("/home/machinekit/Desktop/armApi/temp.ngc")
+        self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
         self.c.auto(linuxcnc.AUTO_RUN, 1)
       else:
@@ -394,7 +394,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         typus = "info"
       return uweb.Response(json.dumps({"type": typus, "msg": msg}), content_type="application/json")
-
 
   def FourOhFour(self, path):
     """The request could not be fulfilled, this returns a 404."""
