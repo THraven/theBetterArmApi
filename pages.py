@@ -29,6 +29,7 @@ class PageMaker(uweb.DebuggingPageMaker):
    }
   s = linuxcnc.stat()
   c = linuxcnc.command()
+  e = linuxcnc.error_channel()
 
   def queryParser(self):
     """Will return a dict with all the data in env['QUERY_STRING']."""
@@ -381,6 +382,19 @@ class PageMaker(uweb.DebuggingPageMaker):
       return get()
     elif req == "POST":
       return post()
+
+  def Error(self):
+    """Return errors form the machine."""
+    error = self.e.poll()
+
+    if error:
+      kind, msg = error
+      if kind in (linuxcnc.NML_ERROR, linuxcnc.OPERATOR_ERROR):
+        typus = "error"
+      else:
+        typus = "info"
+      return uweb.Response(json.dumps({"type": typus, "msg": msg}), content_type="application/json")
+
 
   def FourOhFour(self, path):
     """The request could not be fulfilled, this returns a 404."""
