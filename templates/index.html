@@ -7,7 +7,9 @@
 
   </head>
   <body>
+
     <script language="JavaScript">
+    // this JS was needed to send a head from a html page
       $(document).ready(function(){
         // head call for the stats link
         $("#stats").click(function(e){
@@ -35,29 +37,10 @@
             }
           });
         });
-        $("#pos").click(function(e) {
-          window.setInterval(function(){
-          $.ajax({
-              type: 'GET',
-              url: "/Position",
-              complete: function(data) {
-                stuff = data.responseJSON["axis"];
-                console.log(stuff);
-                document.getElementById("x").innerHTML = stuff['X'];
-                document.getElementById("y").innerHTML = stuff['Y'];
-                document.getElementById("z").innerHTML = stuff['Z'];
-              }
-          });
-        }, 500);
-       });
       });
     </script>
 
     <h2>Position</h2>
-    <button id="pos">start tracking</button>
-    <div id="x">xyz</div>
-    <div id="y">xyz</div>
-    <div id="z">xyz</div>
     <form action="/Position" method="POST">
       <input type="text" name="X">
       <input type="text" name="Y">

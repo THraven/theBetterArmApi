@@ -1,6 +1,5 @@
 #!/usr/bin/python
 """Html generators for the base uweb server."""
-# if you want to easly find a link and you have the ctrl+f feature just search FF[link name] and you'll find it
 
 import uweb
 import linuxcnc
@@ -31,6 +30,7 @@ class PageMaker(uweb.DebuggingPageMaker):
   c = linuxcnc.command()
   e = linuxcnc.error_channel()
 
+  # general urility methods
   def queryParser(self):
     """Will return a dict with all the data in env['QUERY_STRING']."""
     raw = self.req.env["QUERY_STRING"]
@@ -58,11 +58,11 @@ class PageMaker(uweb.DebuggingPageMaker):
         count += 1
     return allAxis
 
+  # methods bound to a link
   def Index(self):
     """Return the index.html template."""
     return self.parser.Parse('index.html')
 
-  # FFPostion
   def Position(self):
     """Return and set the position of all axis in machine."""
     # if you wanna change how the POST works, do it here
@@ -104,7 +104,6 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
-  # FFFile
   def File(self):
     """GET will return file running.
 
@@ -129,7 +128,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.mode(linuxcnc.MODE_AUTO)
         self.c.wait_complete()
         with open("armApi/temp.ngc", "w") as F:
-          F.write(fileData)
+          File.write(fileData)
         self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
         self.c.auto(linuxcnc.AUTO_RUN, 1)
@@ -148,7 +147,6 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
-  # FFStats
   def Stats(self):
     """GET link will return the stats of the machine.
 
@@ -195,7 +193,6 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "HEAD":
       return head()
 
-  # FFHome
   def Home(self):
     """GET will return homed flag.
 
@@ -223,7 +220,6 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
-  # FFButtons
   def Buttons(self):
     """Buttons can handle button commands."""
     if self.req.env["REQUEST_METHOD"] == "POST":
@@ -249,7 +245,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         return "button not found"
 
-  # FFPrefabs
   def Prefabs(self):
     """GET will return all prefabs saved in the prefabs folder.
 
@@ -258,35 +253,35 @@ class PageMaker(uweb.DebuggingPageMaker):
     HEAD will allow you to run the file given.
     """
     # this is will make sure that all ids in the file are one of a kind
-    F = open("armApi/prefabs/0&amount.txt", "w")
-    F.close()
-    F = open("armApi/prefabs/0&amount.txt", "r+")
-    if F.read() == "":
-      F.write("%s" % len(os.listdir("armApi/prefabs")))
-      F.close()
+    File = open("armApi/prefabs/0&amount.txt", "w")
+    File.close()
+    File = open("armApi/prefabs/0&amount.txt", "r+")
+    if File.read() == "":
+      File.write("%s" % len(os.listdir("armApi/prefabs")))
+      File.close()
     else:
       files = os.listdir("armApi/prefabs/")
       number = int(files[0].split("&")[0]) + 1
-      F = open("armApi/prefabs/0&amount.txt", "w")
-      F.write("%s" % number)
+      File = open("armApi/prefabs/0&amount.txt", "w")
+      File.write("%s" % number)
 
     def get():
       Rjson = {}
       for i in os.listdir("armApi/prefabs"):
         compon = i.split("&")
-        F = open("armApi/prefabs/%s" % i, "r")
-        Rjson.update({"%s" % compon[0]: {"name": compon[1], "content": F.read()}})
+        File = open("armApi/prefabs/%s" % i, "r")
+        Rjson.update({"%s" % compon[0]: {"name": compon[1], "content": File.read()}})
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
     def post():
       if self.req.env["REQUEST_METHOD"] == "POST":
         name = self.post["file"].filename
         content = self.post["file"].value
-        F = open("armApi/prefabs/0&amount.txt", "r")
-        number = F.read()
-        F = open("armApi/prefabs/%s&%s" % (number, name), "w")
+        File = open("armApi/prefabs/0&amount.txt", "r")
+        number = File.read()
+        File = open("armApi/prefabs/%s&%s" % (number, name), "w")
         try:
-          F.write(unicode(content, "utf-8"))
+          File.write(unicode(content, "utf-8"))
         except Exception:
           return "please use utf8 encoding for your files"
         return self.Index()
@@ -300,7 +295,7 @@ class PageMaker(uweb.DebuggingPageMaker):
             fullname = i
         self.c.mode(linuxcnc.MODE_AUTO)
         self.c.wait_complete()
-        self.c.program_open("/home/machinekit/Desktop/armApi/prefabs/%s" % fullname)
+        self.c.program_open("/armApi/prefabs/%s" % fullname)
         self.c.wait_complete()
         self.c.auto(linuxcnc.AUTO_RUN, 1)
 
@@ -311,7 +306,6 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif self.req.env["REQUEST_METHOD"] == "HEAD":
       return head()
 
-  # FFpower
   def Power(self):
     """GET will return the power flag.
 
@@ -353,7 +347,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson.update({"Active": running})
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
-  # FFCoolant
   def Coolant(self):
     """GET will return the mist and flood flags.
 
@@ -362,7 +355,8 @@ class PageMaker(uweb.DebuggingPageMaker):
     self.s.poll()
 
     def get():
-      return uweb.Response(json.dumps({"mist": self.s.mist, "flood": self.s.flood}), content_type="application/json")
+      return uweb.Response(json.dumps({"mist": self.s.mist, "flood": self.s.flood}),
+                           content_type="application/json")
 
     def post():
       if self.post.getfirst("FOM") == "flood":
