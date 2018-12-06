@@ -42,7 +42,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     return data
 
   def axisInMachine(self):
-    """Check what axis are in the machine ."""
+    """Check what axis are in the machine."""
     self.s.poll()
     pos = self.s.actual_position
     allAxis = []
@@ -67,6 +67,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     """Return and set the position of all axis in machine."""
     # if you wanna change how the POST works, do it here
     def post():
+      """will allow you to set the position of the head"""
       self.s.poll()
       gcode = "G1 "
       pos = self.s.actual_position
@@ -87,6 +88,7 @@ class PageMaker(uweb.DebuggingPageMaker):
 
     # if you wanna change how the GET works, do it here
     def get():
+      """will give you the current position of the head"""
       self.s.poll()
       pos = self.s.actual_position
       axis = axis_max = axis_min = {}
@@ -110,6 +112,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     POST will allow you to run a file.
     """
     def get():
+        """Will return if a file is running and if yes which."""
         self.s.poll()
         file = self.s.file
         if file != "":
@@ -121,13 +124,14 @@ class PageMaker(uweb.DebuggingPageMaker):
         return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
     def post():
+      """Will allow you to set the file it should run"""
       try:
         fileData = self.post["File"].value
         fileName = self.post["File"].filename
         self.s.poll()
         self.c.mode(linuxcnc.MODE_AUTO)
         self.c.wait_complete()
-        with open("armApi/temp.ngc", "w") as F:
+        with open("armApi/temp.ngc", "w") as File:
           File.write(fileData)
         self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
@@ -153,6 +157,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     HEAD will allow you to set some stats.
     """
     def get():
+      """Will return you some stats of the machine."""
       self.s.poll()
       Max_vel = self.s.max_velocity
       Spin_rate = self.s.spindle_speed
@@ -172,6 +177,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
     def head():
+      """Will allow you to change some of the stats of the machine."""
       if self.req.env['REQUEST_METHOD'] == "HEAD":
         headz = self.queryParser()
         for i in headz:
@@ -199,6 +205,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     POST will home the machine.
     """
     def get():
+      """Will return which of the axis are homed and wich are not."""
       self.s.poll()
       home = self.s.homed
       if 0 in home:
@@ -208,6 +215,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return home
 
     def post():
+      """Will allow you to tell the machine to go home.""" # It doesn't even have to be drunk.
       if self.req.env["REQUEST_METHOD"] == "POST":
         for i in self.axisInMachine():
           self.c.home(i)
@@ -266,6 +274,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       File.write("%s" % number)
 
     def get():
+      """Will allow you to get all the files stored and there content."""
       Rjson = {}
       for i in os.listdir("armApi/prefabs"):
         compon = i.split("&")
@@ -274,6 +283,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return uweb.Response(json.dumps(Rjson), content_type="application/json")
 
     def post():
+      """Will allow you to send a file and store it in the server."""
       if self.req.env["REQUEST_METHOD"] == "POST":
         name = self.post["file"].filename
         content = self.post["file"].value
@@ -287,6 +297,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         return self.Index()
 
     def head():
+      """Will allow you to run a file on the server."""
       if self.req.env["REQUEST_METHOD"] == "HEAD":
         id = self.queryParser()["id"]
         for i in os.listdir("armApi/prefabs"):
@@ -312,10 +323,12 @@ class PageMaker(uweb.DebuggingPageMaker):
     POST will allow you to turn the power on and off.
     """
     def get():
+      """Will return the power status."""
       self.s.poll()
       return self.s.axis[1]["enabled"]
 
     def post():
+      """Will allow you to toggel the power."""
       self.s.poll()
       on = self.s.axis[1]["enabled"]
       if on:
@@ -355,17 +368,19 @@ class PageMaker(uweb.DebuggingPageMaker):
     self.s.poll()
 
     def get():
+      """Will return the mist, flood status."""
       return uweb.Response(json.dumps({"mist": self.s.mist, "flood": self.s.flood}),
                            content_type="application/json")
 
     def post():
+      """Will allow you to toggel the mist and flood."""
       if self.post.getfirst("FOM") == "flood":
-        if self.s.mist:
+        if self.s.flood:
           self.c.flood(linuxcnc.FLOOD_OFF)
         else:
           self.c.flood(linuxcnc.FLOOD_ON)
       if self.post.getfirst("FOM") == "mist":
-        if self.s.flood:
+        if self.s.mist:
           self.c.mist(linuxcnc.MIST_OFF)
         else:
           self.c.mist(linuxcnc.MIST_ON)
