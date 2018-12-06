@@ -6,6 +6,7 @@ import linuxcnc
 import os
 import os.path
 import json
+import decorators
 
 
 class PageMaker(uweb.DebuggingPageMaker):
@@ -66,6 +67,11 @@ class PageMaker(uweb.DebuggingPageMaker):
   def Position(self):
     """Return and set the position of all axis in machine."""
     # if you wanna change how the POST works, do it here
+    axis = self.axisInMachine()
+    postcheck = []
+    for i in axis:
+      postcheck.append(self.axis[i])
+    @decorators.haspost(postcheck)
     def post():
       """will allow you to set the position of the head"""
       self.s.poll()
@@ -84,9 +90,9 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         gcode + "F10000"
       self.c.mdi(gcode)
-      return gcode
 
     # if you wanna change how the GET works, do it here
+    @decorators.JsonResponse
     def get():
       """will give you the current position of the head"""
       self.s.poll()
@@ -97,7 +103,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         axis_max.update({"%s" % self.axis[i]: self.s.axis[i]["max_position_limit"]})
         axis_min.update({"%s" % self.axis[i]: self.s.axis[i]["min_position_limit"]})
       Rjson = {"axis": axis, "axis_max": axis_max, "axis_min": axis_min}
-      return uweb.Response(json.dumps(Rjson), content_type="application/json")
+      return Rjson
 
     req = self.req.env["REQUEST_METHOD"]
 
@@ -111,6 +117,7 @@ class PageMaker(uweb.DebuggingPageMaker):
 
     POST will allow you to run a file.
     """
+    @decorators.JsonResponse
     def get():
         """Will return if a file is running and if yes which."""
         self.s.poll()
@@ -121,8 +128,9 @@ class PageMaker(uweb.DebuggingPageMaker):
         else:
           running = [False, "no file running"]
         Rjson = {"Running": running[0], "Running_file": running[1], "file": file}
-        return uweb.Response(json.dumps(Rjson), content_type="application/json")
+        return Rjson
 
+    @decorators.haspost(['File'])
     def post():
       """Will allow you to set the file it should run"""
       try:
@@ -156,6 +164,8 @@ class PageMaker(uweb.DebuggingPageMaker):
 
     HEAD will allow you to set some stats.
     """
+
+    @decorators.JsonResponse
     def get():
       """Will return you some stats of the machine."""
       self.s.poll()
@@ -174,7 +184,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         "Current_speed": Current_speed,
         "Feed_rate": Feed_rate,
       }
-      return uweb.Response(json.dumps(Rjson), content_type="application/json")
+      return Rjson
 
     def head():
       """Will allow you to change some of the stats of the machine."""
@@ -190,7 +200,6 @@ class PageMaker(uweb.DebuggingPageMaker):
           pass
         if Feed_rate:
           self.c.feedrate(float(headz["Feed_rate"]))
-        return 1
 
     req = self.req.env["REQUEST_METHOD"]
 
@@ -228,6 +237,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
+  @decorators.haspost(['Command'])
   def Buttons(self):
     """Buttons can handle button commands."""
     if self.req.env["REQUEST_METHOD"] == "POST":
@@ -273,6 +283,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       File = open("armApi/prefabs/0&amount.txt", "w")
       File.write("%s" % number)
 
+    @decorators.JsonResponse
     def get():
       """Will allow you to get all the files stored and there content."""
       Rjson = {}
@@ -280,8 +291,9 @@ class PageMaker(uweb.DebuggingPageMaker):
         compon = i.split("&")
         File = open("armApi/prefabs/%s" % i, "r")
         Rjson.update({"%s" % compon[0]: {"name": compon[1], "content": File.read()}})
-      return uweb.Response(json.dumps(Rjson), content_type="application/json")
+      return Rjson
 
+    @decorators.haspost(['file'])
     def post():
       """Will allow you to send a file and store it in the server."""
       if self.req.env["REQUEST_METHOD"] == "POST":
@@ -344,6 +356,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
+  @decorators.JsonResponse
   def Status(self):
     """GET will return return the status of some stuff look in the doc for specifics."""
     if self.req.env["REQUEST_METHOD"] == "GET":
@@ -358,7 +371,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson.update({"Power": self.s.axis[1]["enabled"]})
       Rjson.update({"Home": home})
       Rjson.update({"Active": running})
-      return uweb.Response(json.dumps(Rjson), content_type="application/json")
+      return Rjson
 
   def Coolant(self):
     """GET will return the mist and flood flags.
@@ -367,11 +380,12 @@ class PageMaker(uweb.DebuggingPageMaker):
     """
     self.s.poll()
 
+    @decorators.JsonResponse
     def get():
       """Will return the mist, flood status."""
-      return uweb.Response(json.dumps({"mist": self.s.mist, "flood": self.s.flood}),
-                           content_type="application/json")
+      return {"mist": self.s.mist, "flood": self.s.flood}
 
+    @decorators.haspost(["FOM"])
     def post():
       """Will allow you to toggel the mist and flood."""
       if self.post.getfirst("FOM") == "flood":
@@ -392,6 +406,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
+  @decorators.JsonResponse
   def Error(self):
     """Return errors form the machine."""
     error = self.e.poll()
@@ -402,7 +417,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         typus = "error"
       else:
         typus = "info"
-      return uweb.Response(json.dumps({"type": typus, "msg": msg}), content_type="application/json")
+      return {"type": typus, "msg": msg}
 
   def FourOhFour(self, path):
     """The request could not be fulfilled, this returns a 404."""
