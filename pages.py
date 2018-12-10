@@ -31,59 +31,27 @@ class PageMaker(uweb.DebuggingPageMaker):
   c = linuxcnc.command()
   e = linuxcnc.error_channel()
 
-  # general urility methods
-  def queryParser(self):
-    """Will return a dict with all the data in env['QUERY_STRING']."""
-    raw = self.req.env["QUERY_STRING"]
-    entrys = raw.split("&")
-    data = {}
-    for i in entrys:
-      thing = i.split("=")
-      data.update({"%s" % thing[0]: "%s" % thing[1]})
-    return data
-
-  def axisInMachine(self):
-    """Check what axis are in the machine."""
-    self.s.poll()
-    pos = self.s.actual_position
-    allAxis = []
-    axis = self.s.axis
-    count = 0
-    axisthing = []
-    for i in pos:
-      if axis[count]["max_position_limit"] != 0.0:
-        allAxis.append(count)
-        count += 1
-      else:
-        axisthing.append(axis[count]["max_position_limit"])
-        count += 1
-    return allAxis
 
   # methods bound to a link
   def Index(self):
     """Return the index.html template."""
     return self.parser.Parse('index.html')
 
-  def Position(self):
+  @decorators.axisInMachine
+  def Position(self, axisInMachine):
     """Return and set the position of all axis in machine."""
     # if you wanna change how the POST works, do it here
-    axis = self.axisInMachine()
-    postcheck = []
-    for i in axis:
-      postcheck.append(self.axis[i])
-    @decorators.haspost(postcheck)
     def post():
       """will allow you to set the position of the head"""
       self.s.poll()
       gcode = "G1 "
       pos = self.s.actual_position
-      axis = self.axisInMachine()
-      for i in axis:
+      for i in axisInMachine:
         if self.post.getfirst(self.axis[i]):
           gcode = gcode + "%s%s " % (self.axis[i],
                                      self.post.getfirst(self.axis[i]))
         else:
-          gcode = gcode + "%s%s " % (self.axis[i], round(pos[i]))
+          gcode = gcode + "%s%s " % (self.axis[i], pos[i])
 
       if self.post.getfirst("F"):
         gcode = gcode + "F%s" % self.post.getfirst("F")
@@ -98,7 +66,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       pos = self.s.actual_position
       axis = axis_max = axis_min = {}
-      for i in self.axisInMachine():
+      for i in axisInMachine:
         axis.update({"%s" % self.axis[i]: pos[i]})
         axis_max.update({"%s" % self.axis[i]: self.s.axis[i]["max_position_limit"]})
         axis_min.update({"%s" % self.axis[i]: self.s.axis[i]["min_position_limit"]})
@@ -159,6 +127,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
+  @decorators.axisInMachine
   def Stats(self):
     """GET link will return the stats of the machine.
 
@@ -172,7 +141,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       Max_vel = self.s.max_velocity
       Spin_rate = self.s.spindle_speed
       Axis = []
-      for i in self.axisInMachine():
+      for i in axisInMachine:
         Axis.append(self.axis[i])
       sum = self.s.axis[0]["velocity"] + self.s.axis[1]["velocity"] + self.s.axis[2]["velocity"]
       Current_speed = sum / 3
@@ -186,10 +155,10 @@ class PageMaker(uweb.DebuggingPageMaker):
       }
       return Rjson
 
-    def head():
+    @decorators.head
+    def head(headz):
       """Will allow you to change some of the stats of the machine."""
       if self.req.env['REQUEST_METHOD'] == "HEAD":
-        headz = self.queryParser()
         for i in headz:
           Max_vel = 1 if i == "Max_vel" else None
           Spin_rate = 1 if i == "Spin_rate" else None
@@ -208,7 +177,8 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "HEAD":
       return head()
 
-  def Home(self):
+  @decorators.axisInMachine
+  def Home(self, axisInMachine):
     """GET will return homed flag.
 
     POST will home the machine.
@@ -226,7 +196,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     def post():
       """Will allow you to tell the machine to go home.""" # It doesn't even have to be drunk.
       if self.req.env["REQUEST_METHOD"] == "POST":
-        for i in self.axisInMachine():
+        for i in axisInMachine:
           self.c.home(i)
           self.c.wait_complete()
 
@@ -296,22 +266,22 @@ class PageMaker(uweb.DebuggingPageMaker):
     @decorators.haspost(['file'])
     def post():
       """Will allow you to send a file and store it in the server."""
-      if self.req.env["REQUEST_METHOD"] == "POST":
-        name = self.post["file"].filename
-        content = self.post["file"].value
-        File = open("armApi/prefabs/0&amount.txt", "r")
-        number = File.read()
-        File = open("armApi/prefabs/%s&%s" % (number, name), "w")
-        try:
-          File.write(unicode(content, "utf-8"))
-        except Exception:
-          return "please use utf8 encoding for your files"
-        return self.Index()
+      name = self.post["file"].filename
+      content = self.post["file"].value
+      File = open("armApi/prefabs/0&amount.txt", "r")
+      number = File.read()
+      File = open("armApi/prefabs/%s&%s" % (number, name), "w")
+      try:
+        File.write(unicode(content, "utf-8"))
+      except Exception:
+        return "please use utf8 encoding for your files"
+      return self.Index()
 
-    def head():
+    @decorators.head
+    def head(headz):
       """Will allow you to run a file on the server."""
       if self.req.env["REQUEST_METHOD"] == "HEAD":
-        id = self.queryParser()["id"]
+        id = headz["id"]
         for i in os.listdir("armApi/prefabs"):
           name = i.split("&")[0]
           if name == id:
