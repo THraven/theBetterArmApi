@@ -128,7 +128,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return post()
 
   @decorators.axisInMachine
-  def Stats(self):
+  def Stats(self, axisInMachine):
     """GET link will return the stats of the machine.
 
     HEAD will allow you to set some stats.
