@@ -31,7 +31,6 @@ class PageMaker(uweb.DebuggingPageMaker):
   c = linuxcnc.command()
   e = linuxcnc.error_channel()
 
-
   # methods bound to a link
   def Index(self):
     """Return the index.html template."""
@@ -62,7 +61,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     # if you wanna change how the GET works, do it here
     @decorators.JsonResponse
     def get():
-      """will give you the current position of the head"""
+      """Will give you the current position of the head."""
       self.s.poll()
       pos = self.s.actual_position
       axis = axis_max = axis_min = {}
@@ -100,7 +99,7 @@ class PageMaker(uweb.DebuggingPageMaker):
 
     @decorators.haspost(['File'])
     def post():
-      """Will allow you to set the file it should run"""
+      """Will allow you to set the file it should run."""
       try:
         fileData = self.post["File"].value
         fileName = self.post["File"].filename
@@ -133,7 +132,6 @@ class PageMaker(uweb.DebuggingPageMaker):
 
     HEAD will allow you to set some stats.
     """
-
     @decorators.JsonResponse
     def get():
       """Will return you some stats of the machine."""
@@ -184,7 +182,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     POST will home the machine.
     """
     def get():
-      """Will return which of the axis are homed and wich are not."""
+      """Will return which of the axis are homed and which are not."""
       self.s.poll()
       home = self.s.homed
       if 0 in home:
@@ -194,7 +192,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       return home
 
     def post():
-      """Will allow you to tell the machine to go home.""" # It doesn't even have to be drunk.
+      """Will allow you to tell the machine to go home."""  # It doesn't even have to be drunk.
       if self.req.env["REQUEST_METHOD"] == "POST":
         for i in axisInMachine:
           self.c.home(i)
