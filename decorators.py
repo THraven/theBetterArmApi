@@ -13,8 +13,8 @@ def head(f):
     for i in entrys:
       thing = i.split("=")
       data.update({"%s" % thing[0]: "%s" % thing[1]})
-    args += (data, )
-    f(*args, **kwargs)
+    self.headz = data
+    return f(*args, **kwargs)
   return wrapper
 
 

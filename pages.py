@@ -191,19 +191,19 @@ class PageMaker(uweb.DebuggingPageMaker):
       return Rjson
 
     @decorators.head
-    def head(headz):
+    def head():
       """Will allow you to change some of the stats of the machine."""
       if self.req.env['REQUEST_METHOD'] == "HEAD":
-        for i in headz:
+        for i in self.headz:
           Max_vel = 1 if i == "Max_vel" else None
           Spin_rate = 1 if i == "Spin_rate" else None
           Feed_rate = 1 if i == "Feed_rate" else None
         if Max_vel:
-          self.c.maxvel(float(headz["Max_vel"]))
+          self.c.maxvel(float(self.headz["Max_vel"]))
         if Spin_rate:
           pass
         if Feed_rate:
-          self.c.feedrate(float(headz["Feed_rate"]))
+          self.c.feedrate(float(self.headz["Feed_rate"]))
 
     req = self.req.env["REQUEST_METHOD"]
 
@@ -312,10 +312,10 @@ class PageMaker(uweb.DebuggingPageMaker):
       return self.Index()
 
     @decorators.head
-    def head(headz):
+    def head():
       """Will allow you to run a file on the server."""
       if self.req.env["REQUEST_METHOD"] == "HEAD":
-        id = headz["id"]
+        id = self.headz["id"]
         for i in os.listdir("armApi/prefabs"):
           name = i.split("&")[0]
           if name == id:
