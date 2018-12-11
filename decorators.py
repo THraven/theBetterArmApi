@@ -2,18 +2,12 @@
 
 import json
 import uweb
-import linuxcnc
-s = linuxcnc.stat()
-axis = {
-    0: "X",  1: "Y",  2: "Z",  3: "A",
-    4: "B",  5: "C",  6: "U",  7: "V",
-    8: "W",  9: "R"}
-
 
 def head(f):
   """Will return a dict with all the data in env['QUERY_STRING']."""
   def wrapper(*args, **kwargs):
-    raw = req.env["QUERY_STRING"]
+    self = args[0]
+    raw = self.req.env["QUERY_STRING"]
     entrys = raw.split("&")
     data = {}
     for i in entrys:
@@ -27,10 +21,11 @@ def head(f):
 def axisInMachine(f):
   """will check how many axis are in the machine"""
   def wrapper(*args, **kwargs):
-    s.poll()
-    pos = s.actual_position
+    self = args[0]
+    self.s.poll()
+    pos = self.s.actual_position
     allAxis = []
-    axis = s.axis
+    axis = self.s.axis
     count = 0
     axisthing = []
     for i in pos:

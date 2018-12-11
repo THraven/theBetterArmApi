@@ -15,6 +15,28 @@ class PageMaker(uweb.DebuggingPageMaker):
   Each page as a separate method
   """
 
+
+  @property
+  def s(self):
+    if hasattr(self, '_s'):
+      return self._s
+    self._s = linuxcnc.stat()
+    return self._s
+
+  @property
+  def c(self):
+    if hasattr(self, '_c'):
+      return self._c
+    self._c = linuxcnc.command()
+    return self._c
+
+  @property
+  def e(self):
+    if hasattr(self, '_e'):
+      return self._e
+    self._e = linuxcnc.error_channel()
+    return self._e
+
   axis = {
     0: "X",
     1: "Y",
@@ -27,17 +49,33 @@ class PageMaker(uweb.DebuggingPageMaker):
     8: "W",
     9: "R"
    }
-  s = linuxcnc.stat()
-  c = linuxcnc.command()
-  e = linuxcnc.error_channel()
+
+  @property
+  def axisInMachine(self):
+    if hasattr(self, '_axisInMachine'):
+      return self._axisInMachine
+
+    self.s.poll()
+    pos = self.s.actual_position
+    allAxis = []
+    axis = self.s.axis
+    count = 0
+    axisthing = []
+    for i in pos:
+      if axis[count]["max_position_limit"] != 0.0:
+        allAxis.append(count)
+      else:
+        axisthing.append(axis[count]["max_position_limit"])
+      count += 1
+    self._axisInMachine = allAxis
+    return self._axisInMachine
 
   # methods bound to a link
   def Index(self):
     """Return the index.html template."""
     return self.parser.Parse('index.html')
 
-  @decorators.axisInMachine
-  def Position(self, axisInMachine):
+  def Position(self):
     """Return and set the position of all axis in machine."""
     # if you wanna change how the POST works, do it here
     def post():
@@ -45,7 +83,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       gcode = "G1 "
       pos = self.s.actual_position
-      for i in axisInMachine:
+      for i in self.axisInMachine:
         if self.post.getfirst(self.axis[i]):
           gcode = gcode + "%s%s " % (self.axis[i],
                                      self.post.getfirst(self.axis[i]))
@@ -65,7 +103,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       pos = self.s.actual_position
       axis = axis_max = axis_min = {}
-      for i in axisInMachine:
+      for i in self.axisInMachine:
         axis.update({"%s" % self.axis[i]: pos[i]})
         axis_max.update({"%s" % self.axis[i]: self.s.axis[i]["max_position_limit"]})
         axis_min.update({"%s" % self.axis[i]: self.s.axis[i]["min_position_limit"]})
@@ -126,8 +164,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
-  @decorators.axisInMachine
-  def Stats(self, axisInMachine):
+  def Stats(self):
     """GET link will return the stats of the machine.
 
     HEAD will allow you to set some stats.
@@ -139,7 +176,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       Max_vel = self.s.max_velocity
       Spin_rate = self.s.spindle_speed
       Axis = []
-      for i in axisInMachine:
+      for i in self.axisInMachine:
         Axis.append(self.axis[i])
       sum = self.s.axis[0]["velocity"] + self.s.axis[1]["velocity"] + self.s.axis[2]["velocity"]
       Current_speed = sum / 3
@@ -175,8 +212,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "HEAD":
       return head()
 
-  @decorators.axisInMachine
-  def Home(self, axisInMachine):
+  def Home(self):
     """GET will return homed flag.
 
     POST will home the machine.
@@ -194,7 +230,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     def post():
       """Will allow you to tell the machine to go home."""  # It doesn't even have to be drunk.
       if self.req.env["REQUEST_METHOD"] == "POST":
-        for i in axisInMachine:
+        for i in self.axisInMachine:
           self.c.home(i)
           self.c.wait_complete()
 
