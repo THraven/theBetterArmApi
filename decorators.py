@@ -18,45 +18,25 @@ def head(f):
   return wrapper
 
 
-def axisInMachine(f):
-  """will check how many axis are in the machine"""
-  def wrapper(*args, **kwargs):
-    self = args[0]
-    self.s.poll()
-    pos = self.s.actual_position
-    allAxis = []
-    axis = self.s.axis
-    count = 0
-    axisthing = []
-    for i in pos:
-      if axis[count]["max_position_limit"] != 0.0:
-        allAxis.append(count)
-      else:
-        axisthing.append(axis[count]["max_position_limit"])
-      count += 1
-    args += (allAxis, )
-    return f(*args, **kwargs)
-  return wrapper
-
-
 def haspost(fields=[], message='Error: postdata missing'):
-    """Decorator that checks if the requested post vars are available"""
-    def checkfields(f):
-        def wrapper(*args, **kwargs):
-          if not args[0].post:
-            return args[0].ErrorPage(message)
-          for field in fields:
-            if field not in args[0].post:
-              return args[0].ErrorPage('%s, %s missing.' % (message, field))
-          return f(*args, **kwargs)
-        return wrapper
-    return checkfields
+  """Decorator that checks if the requested post vars are available"""
+  def checkfields(f):
+    def wrapper(*args, **kwargs):
+      self = args[0]
+      if not self.post:
+        return self.ErrorPage(message)
+      for field in fields:
+        if field not in self.post:
+          return self.ErrorPage('%s, %s missing.' % (message, field))
+      return f(*args, **kwargs)
+    return wrapper
+  return checkfields
 
 
 def JsonResponse(f):
   """Return the dict given as a json obj."""
   def wrapper(*args, **kwargs):
     return uweb.Response(
-        content=json.dumps(f(*args, **kwargs)),
-        content_type="application/json")
+      content=json.dumps(f(*args, **kwargs)),
+      content_type="application/json")
   return wrapper
