@@ -37,18 +37,23 @@ class PageMaker(uweb.DebuggingPageMaker):
     self._e = linuxcnc.error_channel()
     return self._e
 
-  axis = {
-    0: "X",
-    1: "Y",
-    2: "Z",
-    3: "A",
-    4: "B",
-    5: "C",
-    6: "U",
-    7: "V",
-    8: "W",
-    9: "R"
-   }
+  @property
+  def axis(self):
+    if hasattr(self, '_axis'):
+      return self._axis
+    self._axis = {
+     0: "X",
+     1: "Y",
+     2: "Z",
+     3: "A",
+     4: "B",
+     5: "C",
+     6: "U",
+     7: "V",
+     8: "W",
+     9: "R"
+    }
+    return self._axis
 
   @property
   def axisInMachine(self):
@@ -70,6 +75,19 @@ class PageMaker(uweb.DebuggingPageMaker):
     self._axisInMachine = allAxis
     return self._axisInMachine
 
+  @property
+  def headz(self):
+    if hasattr(self, '_headz'):
+      return self._headz
+    return None
+
+  @headz.setter
+  def headz(self, value):
+    self._headz = value
+
+  @decorators.head
+  def Test(self):
+    pass
   # methods bound to a link
   def Index(self):
     """Return the index.html template."""
@@ -83,6 +101,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       gcode = "G1 "
       pos = self.s.actual_position
+      temp = []
       for i in self.axisInMachine:
         if self.post.getfirst(self.axis[i]):
           gcode = gcode + "%s%s " % (self.axis[i],
@@ -95,6 +114,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         gcode + "F10000"
       self.c.mdi(gcode)
+      return gcode
 
     # if you wanna change how the GET works, do it here
     @decorators.JsonResponse
@@ -102,6 +122,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       """Will give you the current position of the head."""
       self.s.poll()
       pos = self.s.actual_position
+      temp = []
       axis = axis_max = axis_min = {}
       for i in self.axisInMachine:
         axis.update({"%s" % self.axis[i]: pos[i]})
@@ -117,6 +138,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
+  @decorators.haspost(['File'])
   def File(self):
     """GET will return file running.
 
@@ -135,7 +157,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         Rjson = {"Running": running[0], "Running_file": running[1], "file": file}
         return Rjson
 
-    @decorators.haspost(['File'])
     def post():
       """Will allow you to set the file it should run."""
       try:
@@ -151,12 +172,8 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.auto(linuxcnc.AUTO_RUN, 1)
         Rjson = {"fileData": fileData, "fileName": fileName}
         return Rjson
-      except Exception as e:
-        if self.req.env["REQUEST_METHOD"] == "POST":
-          raise e
-        else:
-          pass
-
+      except Exception:
+        pass
     req = self.req.env["REQUEST_METHOD"]
 
     if req == "GET":
@@ -164,6 +181,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     elif req == "POST":
       return post()
 
+  @decorators.head
   def Stats(self):
     """GET link will return the stats of the machine.
 
@@ -190,20 +208,14 @@ class PageMaker(uweb.DebuggingPageMaker):
       }
       return Rjson
 
-    @decorators.head
     def head():
       """Will allow you to change some of the stats of the machine."""
-      if self.req.env['REQUEST_METHOD'] == "HEAD":
-        for i in self.headz:
-          Max_vel = 1 if i == "Max_vel" else None
-          Spin_rate = 1 if i == "Spin_rate" else None
-          Feed_rate = 1 if i == "Feed_rate" else None
-        if Max_vel:
-          self.c.maxvel(float(self.headz["Max_vel"]))
-        if Spin_rate:
-          pass
-        if Feed_rate:
-          self.c.feedrate(float(self.headz["Feed_rate"]))
+      if self.headz['Max_vel']:
+        self.c.maxvel(float(self.headz["Max_vel"]))
+      if self.headz['Spin_rate']:
+        pass
+      if self.headz['Feed_rate']:
+        self.c.feedrate(float(self.headz["Feed_rate"]))
 
     req = self.req.env["REQUEST_METHOD"]
 
@@ -267,6 +279,8 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         return "button not found"
 
+  @decorators.haspost(['file'])
+  @decorators.head
   def Prefabs(self):
     """GET will return all prefabs saved in the prefabs folder.
 
@@ -297,7 +311,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         Rjson.update({"%s" % compon[0]: {"name": compon[1], "content": File.read()}})
       return Rjson
 
-    @decorators.haspost(['file'])
     def post():
       """Will allow you to send a file and store it in the server."""
       name = self.post["file"].filename
@@ -311,7 +324,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         return "please use utf8 encoding for your files"
       return self.Index()
 
-    @decorators.head
     def head():
       """Will allow you to run a file on the server."""
       if self.req.env["REQUEST_METHOD"] == "HEAD":
@@ -377,6 +389,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson.update({"Active": running})
       return Rjson
 
+  @decorators.haspost(["FOM"])
   def Coolant(self):
     """GET will return the mist and flood flags.
 
@@ -389,7 +402,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       """Will return the mist, flood status."""
       return {"mist": self.s.mist, "flood": self.s.flood}
 
-    @decorators.haspost(["FOM"])
     def post():
       """Will allow you to toggel the mist and flood."""
       if self.post.getfirst("FOM") == "flood":

@@ -7,7 +7,6 @@
 
   </head>
   <body>
-
     <script language="JavaScript">
     // this JS was needed to send a head from a html page
       $(document).ready(function(){
@@ -16,11 +15,13 @@
           var Max_vel = document.getElementById("Max_vel").value;
           var Spin_rate = document.getElementById("Spin_rate").value;
           var Feed_rate = document.getElementById("Feed_rate").value;
+          console.log("stuff");
           $.ajax({
             type: 'HEAD',
             url: "/Stats",
             data: {"Max_vel": Max_vel, "Spin_rate": Spin_rate, "Feed_rate": Feed_rate},
             complete: function(data) {
+              console.log("stuff");
               stuff = data.responseJSON;
               console.log(stuff);
             }
