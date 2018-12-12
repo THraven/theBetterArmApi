@@ -5,7 +5,6 @@ import uweb
 import linuxcnc
 import os
 import os.path
-import json
 import decorators
 
 
@@ -88,6 +87,7 @@ class PageMaker(uweb.DebuggingPageMaker):
   @decorators.head
   def Test(self):
     pass
+
   # methods bound to a link
   def Index(self):
     """Return the index.html template."""
@@ -106,8 +106,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         if self.post.getfirst(self.axis[i]):
           gcode = gcode + "%s%s " % (self.axis[i],
                                      self.post.getfirst(self.axis[i]))
-        else:
-          gcode = gcode + "%s%s " % (self.axis[i], pos[i])
 
       if self.post.getfirst("F"):
         gcode = gcode + "F%s" % self.post.getfirst("F")
@@ -263,7 +261,9 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.s.poll()
         if self.s.estop:
           self.c.state(2)
+          self.c.state(2)
         else:
+          self.c.state(1)
           self.c.state(1)
       elif self.post.getfirst("Command") == "Stop":
         self.c.abort()
@@ -363,6 +363,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.state(3)
       else:
         self.c.state(4)
+        self.c.state(4)
       return self.Index()
 
     req = self.req.env["REQUEST_METHOD"]
@@ -389,7 +390,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       Rjson.update({"Active": running})
       return Rjson
 
-  @decorators.haspost(["FOM"])
   def Coolant(self):
     """GET will return the mist and flood flags.
 
@@ -402,25 +402,30 @@ class PageMaker(uweb.DebuggingPageMaker):
       """Will return the mist, flood status."""
       return {"mist": self.s.mist, "flood": self.s.flood}
 
-    def post():
+    @decorators.haspost(["FOM"])
+    def post(self):
       """Will allow you to toggel the mist and flood."""
+      self.s.poll()
       if self.post.getfirst("FOM") == "flood":
-        if self.s.flood:
+        if self.s.flood == 1:
+          self.c.flood(linuxcnc.FLOOD_OFF)
           self.c.flood(linuxcnc.FLOOD_OFF)
         else:
           self.c.flood(linuxcnc.FLOOD_ON)
       if self.post.getfirst("FOM") == "mist":
-        if self.s.mist:
-          self.c.mist(linuxcnc.MIST_OFF)
+        if self.s.mist == 1:
+          self.c.mist(linuxcnc.MIST_OFF)  # there are two of these for a reason.
+          self.c.mist(linuxcnc.MIST_OFF)  # if there is just one it doesn't turn off
         else:
           self.c.mist(linuxcnc.MIST_ON)
+      self.s.poll()
 
     req = self.req.env["REQUEST_METHOD"]
 
     if req == "GET":
       return get()
     elif req == "POST":
-      return post()
+      return post(self), self.s.mist, self.s.flood
 
   @decorators.JsonResponse
   def Error(self):

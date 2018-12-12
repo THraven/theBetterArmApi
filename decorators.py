@@ -26,10 +26,10 @@ def haspost(fields=[], message='Error: postdata missing'):
   def checkfields(f):
     def wrapper(*args, **kwargs):
       pages = args[0]
-      if not pages.post:
+      if not pages.post and pages.req.env(["REQUEST_METHOD"] == 'POST'):
         return pages.ErrorPage(message)
       for field in fields:
-        if field not in pages.post:
+        if field not in pages.post and pages.req.env(["REQUEST_METHOD"] == 'POST'):
           return pages.ErrorPage('%s, %s missing.' % (message, field))
       return f(*args, **kwargs)
     return wrapper
