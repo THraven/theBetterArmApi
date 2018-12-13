@@ -15,6 +15,8 @@ class PageMaker(uweb.DebuggingPageMaker):
   """
 
 
+
+
   @property
   def s(self):
     if hasattr(self, '_s'):
@@ -35,6 +37,27 @@ class PageMaker(uweb.DebuggingPageMaker):
       return self._e
     self._e = linuxcnc.error_channel()
     return self._e
+
+  @property
+  def doublerunbug(self):
+    """there is a bug where a command has to be done twice before
+    if works properly this will make sure that if this bug happens
+    it's fixed but if it doesn't it won't run the command twice"""
+    if hasattr(self, "_doublerunbug"):
+      return self._doublerunbug
+    self.s.poll()
+    Cstate = self.s.flood
+    self.c.flood(linuxcnc.FLOOD_OFF)
+    self.s.poll()
+    if self.s.flood != Cstate:
+      self._doublerunbug = False
+      if Cstate:
+        self.c.flood(linuxcnc.FLOOD_ON)
+      else:
+        self.c.flood(linuxcnc.FLOOD_OFF)
+      return self._doublerunbug
+    self._doublerunbug = True
+    return self._doublerunbug
 
   @property
   def axis(self):
@@ -86,7 +109,7 @@ class PageMaker(uweb.DebuggingPageMaker):
 
   @decorators.head
   def Test(self):
-    pass
+    return self.doublerunbug
 
   # methods bound to a link
   def Index(self):
@@ -111,6 +134,8 @@ class PageMaker(uweb.DebuggingPageMaker):
         gcode = gcode + "F%s" % self.post.getfirst("F")
       else:
         gcode + "F10000"
+      if self.doublerunbug:
+        self.c.mdi(gcode)
       self.c.mdi(gcode)
       return gcode
 
@@ -161,12 +186,18 @@ class PageMaker(uweb.DebuggingPageMaker):
         fileData = self.post["File"].value
         fileName = self.post["File"].filename
         self.s.poll()
+        if self.doublerunbug:
+          self.c.mode(linuxcnc.MODE_AUTO)
         self.c.mode(linuxcnc.MODE_AUTO)
         self.c.wait_complete()
         with open("armApi/temp.ngc", "w") as File:
           File.write(fileData)
+        if self.doublerunbug:
+          self.c.program_open("armApi/temp.ngc")
         self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
+        if self.doublerunbug:
+          self.c.auto(linuxcnc.AUTO_RUN, 1)
         self.c.auto(linuxcnc.AUTO_RUN, 1)
         Rjson = {"fileData": fileData, "fileName": fileName}
         return Rjson
@@ -208,17 +239,36 @@ class PageMaker(uweb.DebuggingPageMaker):
 
     def head():
       """Will allow you to change some of the stats of the machine."""
-      if self.headz['Max_vel']:
-        self.c.maxvel(float(self.headz["Max_vel"]))
-      if self.headz['Spin_rate']:
+      try:
+        if self.headz['Max_vel']:
+          if self.doublerunbug:
+            self.c.maxvel(float(self.headz["Max_vel"]) / 60.0)
+          self.c.maxvel(float(self.headz["Max_vel"]) / 60.0)
+      except Exception:
         pass
-      if self.headz['Feed_rate']:
-        self.c.feedrate(float(self.headz["Feed_rate"]))
+
+      try:
+        if self.headz['Feed_rate']:
+          if self.doublerunbug:
+            self.c.feedrate(float(self.headz["Feed_rate"]) / 100)
+          self.c.feedrate(float(self.headz["Feed_rate"]) / 100)
+      except Exception:
+        pass
+
+      try:
+        if self.headz['Spin_rate']:
+          pass
+      except Exception:
+        pass
+
+
+      self.s.poll()
+      return self.headz, self.s.max_velocity
 
     req = self.req.env["REQUEST_METHOD"]
 
     if req == "GET":
-      return get()
+      return head()
     elif req == "HEAD":
       return head()
 
@@ -256,22 +306,34 @@ class PageMaker(uweb.DebuggingPageMaker):
     """Buttons can handle button commands."""
     if self.req.env["REQUEST_METHOD"] == "POST":
       if self.post.getfirst("Command") == "Mdi_mode":
+        if self.doublerunbug:
+          self.c.mode(linuxcnc.MODE_MDI)
         self.c.mode(linuxcnc.MODE_MDI)
       elif self.post.getfirst("Command") == "Estop":
         self.s.poll()
         if self.s.estop:
-          self.c.state(2)
+          if self.doublerunbug:
+            self.c.state(2)
           self.c.state(2)
         else:
-          self.c.state(1)
+          if self.doublerunbug:
+            self.c.state(1)
           self.c.state(1)
       elif self.post.getfirst("Command") == "Stop":
+        if self.doublerunbug:
+          self.c.abort()
         self.c.abort()
       elif self.post.getfirst("Command") == "Pause":
+        if self.doublerunbug:
+          self.c.auto(linuxcnc.AUTO_PAUSE)
         self.c.auto(linuxcnc.AUTO_PAUSE)
       elif self.post.getfirst("Command") == "Resume":
+        if self.doublerunbug:
+          self.c.auto(linuxcnc.AUTO_RESUME)
         self.c.auto(linuxcnc.AUTO_RESUME)
       elif self.post.getfirst("Command") == "Repeat":
+        if self.doublerunbug:
+          self.c.mode(linuxcnc.MODE_AUTO)
         self.c.mode(linuxcnc.MODE_AUTO)
         self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
@@ -332,6 +394,8 @@ class PageMaker(uweb.DebuggingPageMaker):
           name = i.split("&")[0]
           if name == id:
             fullname = i
+        if self.doublerunbug:
+          self.c.mode(linuxcnc.MODE_AUTO)
         self.c.mode(linuxcnc.MODE_AUTO)
         self.c.wait_complete()
         self.c.program_open("/armApi/prefabs/%s" % fullname)
@@ -360,9 +424,12 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       on = self.s.axis[1]["enabled"]
       if on:
+        if self.doublerunbug:
+          self.c.state(3)
         self.c.state(3)
       else:
-        self.c.state(4)
+        if self.doublerunbug:
+          self.c.state(4)
         self.c.state(4)
       return self.Index()
 
@@ -408,16 +475,26 @@ class PageMaker(uweb.DebuggingPageMaker):
       self.s.poll()
       if self.post.getfirst("FOM") == "flood":
         if self.s.flood == 1:
+          if self.doublerunbug:
+            self.c.flood(linuxcnc.FLOOD_OFF)
           self.c.flood(linuxcnc.FLOOD_OFF)
-          self.c.flood(linuxcnc.FLOOD_OFF)
+          return False
         else:
+          if self.doublerunbug:
+            self.c.flood(linuxcnc.FLOOD_ON)
           self.c.flood(linuxcnc.FLOOD_ON)
+          return True
       if self.post.getfirst("FOM") == "mist":
         if self.s.mist == 1:
-          self.c.mist(linuxcnc.MIST_OFF)  # there are two of these for a reason.
-          self.c.mist(linuxcnc.MIST_OFF)  # if there is just one it doesn't turn off
+          if self.doublerunbug:
+            self.c.mist(linuxcnc.MIST_OFF)
+          self.c.mist(linuxcnc.MIST_OFF)
+          return False
         else:
+          if self.doublerunbug:
+            self.c.mist(linuxcnc.MIST_ON)
           self.c.mist(linuxcnc.MIST_ON)
+          return True
       self.s.poll()
 
     req = self.req.env["REQUEST_METHOD"]
