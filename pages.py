@@ -259,7 +259,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         return "button not found"
 
-  @decorators.haspost(['file'])
   @decorators.head
   def Prefabs(self):
     """GET will return all prefabs saved in the prefabs folder.
@@ -304,6 +303,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         return "please use utf8 encoding for your files"
       return self.Index()
 
+    @decorators.haspost(['file'])
     def head():
       """Will allow you to run a file on the server."""
       if self.req.env["REQUEST_METHOD"] == "HEAD":
