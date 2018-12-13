@@ -14,27 +14,9 @@ class PageMaker(uweb.DebuggingPageMaker):
   Each page as a separate method
   """
 
-
-  @property
-  def s(self):
-    if hasattr(self, '_s'):
-      return self._s
-    self._s = linuxcnc.stat()
-    return self._s
-
-  @property
-  def c(self):
-    if hasattr(self, '_c'):
-      return self._c
-    self._c = linuxcnc.command()
-    return self._c
-
-  @property
-  def e(self):
-    if hasattr(self, '_e'):
-      return self._e
-    self._e = linuxcnc.error_channel()
-    return self._e
+  s = linuxcnc.stat()
+  c = linuxcnc.command()
+  e = linuxcnc.error_channel()
 
   @property
   def axis(self):
@@ -261,9 +243,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.s.poll()
         if self.s.estop:
           self.c.state(2)
-          self.c.state(2)
         else:
-          self.c.state(1)
           self.c.state(1)
       elif self.post.getfirst("Command") == "Stop":
         self.c.abort()
@@ -363,7 +343,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.state(3)
       else:
         self.c.state(4)
-        self.c.state(4)
       return self.Index()
 
     req = self.req.env["REQUEST_METHOD"]
@@ -409,13 +388,11 @@ class PageMaker(uweb.DebuggingPageMaker):
       if self.post.getfirst("FOM") == "flood":
         if self.s.flood == 1:
           self.c.flood(linuxcnc.FLOOD_OFF)
-          self.c.flood(linuxcnc.FLOOD_OFF)
         else:
           self.c.flood(linuxcnc.FLOOD_ON)
       if self.post.getfirst("FOM") == "mist":
         if self.s.mist == 1:
-          self.c.mist(linuxcnc.MIST_OFF)  # there are two of these for a reason.
-          self.c.mist(linuxcnc.MIST_OFF)  # if there is just one it doesn't turn off
+          self.c.mist(linuxcnc.MIST_OFF)
         else:
           self.c.mist(linuxcnc.MIST_ON)
       self.s.poll()
