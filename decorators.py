@@ -5,7 +5,7 @@ import uweb
 
 
 def head(f):
-  """Will return a dict with all the data in env['QUERY_STRING']."""
+  """Will store a dict with all the data in env['QUERY_STRING'] inside pages.headz."""
   def wrapper(*args, **kwargs):
     pages = args[0]
     raw = pages.req.env["QUERY_STRING"]
@@ -22,7 +22,7 @@ def head(f):
 
 
 def haspost(fields=[], message='Error: postdata missing'):
-  """Decorator that checks if the requested post vars are available"""
+  """Decorator that checks if the requested post vars are available."""
   def checkfields(f):
     def wrapper(*args, **kwargs):
       pages = args[0]

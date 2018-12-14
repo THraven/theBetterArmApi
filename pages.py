@@ -156,6 +156,7 @@ class PageMaker(uweb.DebuggingPageMaker):
         Rjson = {"fileData": fileData, "fileName": fileName}
       except Exception:
         pass
+
     req = self.req.env["REQUEST_METHOD"]
 
     if req == "GET":
@@ -195,7 +196,9 @@ class PageMaker(uweb.DebuggingPageMaker):
       if self.headz['Max_vel']:
         self.c.maxvel(float(self.headz["Max_vel"]))
       if self.headz['Spin_rate']:
-        pass
+          # TODO: there doesn't seem to be a call that can change the spin rate
+          # TODO: but if found put here
+          pass
       if self.headz['Feed_rate']:
         self.c.feedrate(float(self.headz["Feed_rate"]))
 
@@ -204,7 +207,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     if req == "GET":
       return get()
     elif req == "HEAD":
-      return head()
+      head()
 
   def Home(self):
     """GET will return homed flag.
@@ -302,7 +305,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       except Exception:
         pass
 
-    @decorators.haspost(['file'])
     def head():
       """Will allow you to run a file on the server."""
       if self.req.env["REQUEST_METHOD"] == "HEAD":
