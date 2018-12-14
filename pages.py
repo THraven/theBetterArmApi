@@ -14,6 +14,10 @@ class PageMaker(uweb.DebuggingPageMaker):
   Each page as a separate method
   """
 
+  # XXX: this is put in varible rather than a property becouse linuxcnc doesn't
+  # XXX: seem to play nice with them and will require you to run a c.[command]
+  # XXX: twice making for wierd code and the gain from putting them in a property
+  # XXX: is neglectable
   s = linuxcnc.stat()
   c = linuxcnc.command()
   e = linuxcnc.error_channel()
@@ -94,7 +98,6 @@ class PageMaker(uweb.DebuggingPageMaker):
       else:
         gcode + "F10000"
       self.c.mdi(gcode)
-      return gcode
 
     # if you wanna change how the GET works, do it here
     @decorators.JsonResponse
@@ -116,7 +119,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     if req == "GET":
       return get()
     elif req == "POST":
-      return post()
+      post()
 
   @decorators.haspost(['File'])
   def File(self):
@@ -151,7 +154,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.wait_complete()
         self.c.auto(linuxcnc.AUTO_RUN, 1)
         Rjson = {"fileData": fileData, "fileName": fileName}
-        return Rjson
       except Exception:
         pass
     req = self.req.env["REQUEST_METHOD"]
@@ -159,7 +161,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     if req == "GET":
       return get()
     elif req == "POST":
-      return post()
+      post()
 
   @decorators.head
   def Stats(self):
@@ -231,7 +233,7 @@ class PageMaker(uweb.DebuggingPageMaker):
     if req == "GET":
       return get()
     elif req == "POST":
-      return post()
+      post()
 
   @decorators.haspost(['Command'])
   def Buttons(self):
@@ -256,8 +258,6 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.program_open("armApi/temp.ngc")
         self.c.wait_complete()
         self.c.auto(linuxcnc.AUTO_RUN, 1)
-      else:
-        return "button not found"
 
   @decorators.head
   def Prefabs(self):
@@ -300,8 +300,7 @@ class PageMaker(uweb.DebuggingPageMaker):
       try:
         File.write(unicode(content, "utf-8"))
       except Exception:
-        return "please use utf8 encoding for your files"
-      return self.Index()
+        pass
 
     @decorators.haspost(['file'])
     def head():
@@ -321,9 +320,9 @@ class PageMaker(uweb.DebuggingPageMaker):
     if self.req.env["REQUEST_METHOD"] == "GET":
       return get()
     elif self.req.env["REQUEST_METHOD"] == "POST":
-      return post()
+      post()
     elif self.req.env["REQUEST_METHOD"] == "HEAD":
-      return head()
+      head()
 
   def Power(self):
     """GET will return the power flag.
@@ -343,14 +342,14 @@ class PageMaker(uweb.DebuggingPageMaker):
         self.c.state(3)
       else:
         self.c.state(4)
-      return self.Index()
+      self.Index()
 
     req = self.req.env["REQUEST_METHOD"]
 
     if req == "GET":
       return get()
     elif req == "POST":
-      return post()
+      post()
 
   @decorators.JsonResponse
   def Status(self):
@@ -402,7 +401,8 @@ class PageMaker(uweb.DebuggingPageMaker):
     if req == "GET":
       return get()
     elif req == "POST":
-      return post(self), self.s.mist, self.s.flood
+      # XXX: the self is for the decorator
+      post(self)
 
   @decorators.JsonResponse
   def Error(self):
