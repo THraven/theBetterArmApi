@@ -18,7 +18,18 @@ you completely remove the templates folder.
 **Linuxcnc**,
 **Uweb**
 
-must be installed for the API to work as it should
+Must be installed for the API to work as it should.
+To install these dependencies simply do the following:
+
+there are a couple of ways to install machinkit,
+visit: http://www.machinekit.io/docs/getting-started/getting-started-platform/
+to see them all
+
+to install Linuxcnc visit:
+http://www.linuxcnc.org/docs/html/getting-started/getting-linuxcnc.html
+
+to install Uweb simply open a command line and write:
+`pip install uweb`
 
 
 ### mounting the server
